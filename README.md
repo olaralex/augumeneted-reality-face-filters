@@ -51,4 +51,8 @@ npm test
 
 ## Publicare
 
-Publicarea pe GitHub Pages vine mai târziu: va trebui setat `experiments.baseUrl` la `/<nume-repo>` în `app.json`.
+Aplicația se publică automat pe GitHub Pages la fiecare push pe `main` (workflow-ul `.github/workflows/deploy.yml`).
+
+O singură dată, pe GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+
+Adresa va fi `https://<utilizator>.github.io/<nume-repo>/`. Calea `/<nume-repo>` e pusă automat de workflow (`BASE_URL` în `app.config.js`), deci redenumirea repository-ului nu cere nicio modificare în cod. Local aplicația rămâne la rădăcină (`/`).
