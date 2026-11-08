@@ -24,7 +24,7 @@ function glowTexture() {
 }
 
 export function createScene(canvas: HTMLCanvasElement, video: HTMLVideoElement) {
-  const renderer = new THREE.WebGLRenderer({ canvas, preserveDrawingBuffer: true, antialias: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   // left=1/right=0 mirrors x; top=0/bottom=1 matches MediaPipe's y-down.
   const camera = new THREE.OrthographicCamera(1, 0, 0, 1, -10, 10);
   const scene = new THREE.Scene();

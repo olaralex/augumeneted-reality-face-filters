@@ -1,6 +1,6 @@
 # IARA
 
-Aplicație web cu filtre AR pentru față (căști, ochelari, mănușă etc.), cu cameră live, poze și video. Rulează în browser, direct pe telefon.
+Aplicație web cu filtre AR: fața și mâinile capătă o piele de Foc, Gheață, Pământ sau Apă, în imaginea live a camerei, cu poze și video. Rulează în browser, direct pe telefon.
 
 ## Cerințe
 
@@ -12,7 +12,7 @@ Aplicație web cu filtre AR pentru față (căști, ochelari, mănușă etc.), c
 npm install
 ```
 
-Comanda descarcă și modelele MediaPipe necesare (folderul `models/`).
+Comanda descarcă și modelele MediaPipe necesare (`public/models/`) și copiază fișierele WASM (`public/wasm/`).
 
 ## Pe laptop
 

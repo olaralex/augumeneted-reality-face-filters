@@ -15,7 +15,7 @@ import { colors, type ElementId } from './src/theme';
 type Preview = { file: File; kind: 'photo' | 'video' };
 
 export default function App() {
-  const [loaded] = useFonts({ Inter_400Regular, Inter_500Medium });
+  const [loaded, fontErr] = useFonts({ Inter_400Regular, Inter_500Medium });
   const [status, setStatus] = useState<ArStatus>('loading');
   const [faceVisible, setFaceVisible] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
@@ -23,7 +23,8 @@ export default function App() {
   const [recording, setRecording] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
   const stage = useRef<ArStageHandle>(null);
-  if (!loaded) return null;
+  // Font failure falls back to the system font rather than a blank page.
+  if (!loaded && !fontErr) return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
 
   // File is built before the sheet opens so "Salvează" can share with no await first.
   const open = (blob: Blob, kind: Preview['kind']) => {

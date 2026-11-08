@@ -39,7 +39,8 @@ export const ArStage = forwardRef<ArStageHandle, Props>(function ArStage(
     takePhoto() {
       const scene = sceneRef.current, canvas = canvasRef.current;
       if (!scene || !canvas) return Promise.reject(new Error('stage not ready'));
-      scene.render(); // drawing buffer is preserved, so toBlob sees this frame
+      // No preserveDrawingBuffer: render and toBlob must stay in the same task (the executor runs synchronously).
+      scene.render();
       return new Promise<Blob>((resolve, reject) =>
         canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png'));
     },
