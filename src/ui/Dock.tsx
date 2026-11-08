@@ -19,14 +19,22 @@ export function Dock({ active, onSelect, children }: Props) {
               accessibilityRole="button"
               accessibilityLabel={el.label}
               accessibilityState={{ selected }}
-              style={[
-                styles.item,
-                wide ? styles.pill : [styles.circle, { backgroundColor: el.accent }],
-                { borderColor: selected ? el.accent : 'transparent' },
-              ]}
+              style={
+                wide
+                  ? [styles.item, styles.pill, { borderColor: selected ? el.accent : 'transparent' }]
+                  : [styles.ring, { borderColor: selected ? colors.text : 'transparent', opacity: selected ? 1 : 0.55 }]
+              }
             >
-              <Text style={styles.emoji}>{el.emoji}</Text>
-              {wide && <Text style={[styles.label, selected && { color: el.accent }]}>{el.label}</Text>}
+              {wide ? (
+                <>
+                  <Text style={styles.emoji}>{el.emoji}</Text>
+                  <Text style={[styles.label, selected && { color: el.accent }]}>{el.label}</Text>
+                </>
+              ) : (
+                <View style={[styles.circle, { backgroundColor: el.accent }]}>
+                  <Text style={styles.emoji}>{el.emoji}</Text>
+                </View>
+              )}
             </Pressable>
           );
         })}
@@ -49,7 +57,8 @@ const styles = StyleSheet.create({
   },
   item: { borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   pill: { flexDirection: 'row', gap: 6, height: 40, paddingHorizontal: 14, borderRadius: 999 },
-  circle: { width: 40, height: 40, borderRadius: 20 },
+  ring: { padding: 2, borderWidth: 2, borderRadius: 999 },
+  circle: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   emoji: { fontSize: 16 },
   label: { color: colors.text, fontFamily: 'Inter_500Medium', fontSize: 13 },
 });
