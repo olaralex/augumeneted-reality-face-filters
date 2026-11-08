@@ -8,9 +8,9 @@ export const ELEMENTS: readonly { id: ElementId; label: string; emoji: string; a
 ];
 
 export const colors = {
-  bg: '#08090a',
-  line: '#23252a',
-  text: '#f7f8f8',
-  muted: '#8a8f98',
+  bg: '#0a0a0b',
+  line: '#232326',
+  text: '#ededef',
+  muted: '#8a8a93',
   panel: '#111113',
 };
