@@ -20,16 +20,26 @@ export async function createTracker() {
       numFaces: 1,
     }),
   );
-  const handLm = await create((delegate) =>
-    HandLandmarker.createFromOptions(fileset, {
-      baseOptions: { modelAssetPath: url('models/hand_landmarker.task'), delegate },
-      runningMode: 'VIDEO',
-      numHands: 2,
-    }),
-  );
+  let handLm: HandLandmarker;
+  try {
+    handLm = await create((delegate) =>
+      HandLandmarker.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: url('models/hand_landmarker.task'), delegate },
+        runningMode: 'VIDEO',
+        numHands: 2,
+      }),
+    );
+  } catch (e) {
+    face.close();
+    throw e;
+  }
   let lastT = 0;
   let lastHands: P3[][] = [];
   return {
+    close() {
+      face.close();
+      handLm.close();
+    },
     detect(video: HTMLVideoElement, tMs: number, hands: boolean): { face: P3[] | null; hands: P3[][] } {
       if (video.readyState < 2) return { face: null, hands: lastHands };
       const t = Math.max(Math.floor(tMs), lastT + 1); // MediaPipe needs strictly increasing timestamps

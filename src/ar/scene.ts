@@ -15,6 +15,7 @@ export function createScene(canvas: HTMLCanvasElement, video: HTMLVideoElement) 
 
   const videoTex = new THREE.VideoTexture(video);
   videoTex.colorSpace = THREE.SRGBColorSpace;
+  videoTex.flipY = false; // plane v=1 sits at world y=1 (screen bottom); image top must map to y=0
   const bg = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({ map: videoTex, side: THREE.DoubleSide, depthTest: false }),

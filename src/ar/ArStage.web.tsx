@@ -29,6 +29,7 @@ export function ArStage({ element, onStatus, onFaceVisible, retryKey }: Props) {
     let raf = 0;
     let stream: MediaStream | null = null;
     let scene: ReturnType<typeof createScene> | null = null;
+    let tracker: Awaited<ReturnType<typeof createTracker>> | null = null;
 
     (async () => {
       cb.current.onStatus('loading');
@@ -43,11 +44,10 @@ export function ArStage({ element, onStatus, onFaceVisible, retryKey }: Props) {
       }
       if (dead) return stream.getTracks().forEach((t) => t.stop());
       video.srcObject = stream;
-      let tracker;
       try {
         await video.play();
         tracker = await createTracker();
-        if (dead) return;
+        if (dead) return tracker.close();
         scene = createScene(canvas, video);
       } catch {
         if (!dead) cb.current.onStatus('error');
@@ -67,7 +67,7 @@ export function ArStage({ element, onStatus, onFaceVisible, retryKey }: Props) {
         const now = performance.now();
         const g = governor.tick(now - last);
         last = now;
-        const r = tracker.detect(video, now, g.detectHandsThisFrame);
+        const r = tracker!.detect(video, now, g.detectHandsThisFrame);
         const face = faceSmooth.next(r.face);
         const hands = [0, 1].flatMap((i) => (r.hands[i] ? [handSmooth[i].next(r.hands[i])!] : (handSmooth[i].next(null), [])));
         if (!!face !== visible) cb.current.onFaceVisible((visible = !!face));
@@ -84,6 +84,7 @@ export function ArStage({ element, onStatus, onFaceVisible, retryKey }: Props) {
       cancelAnimationFrame(raf);
       stream?.getTracks().forEach((t) => t.stop());
       video.srcObject = null;
+      tracker?.close();
       scene?.dispose();
       sceneRef.current = null;
     };
