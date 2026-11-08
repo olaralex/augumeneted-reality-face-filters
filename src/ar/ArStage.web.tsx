@@ -58,9 +58,16 @@ export const ArStage = forwardRef<ArStageHandle, Props>(function ArStage(
   }), []);
 
   useEffect(() => {
-    const onHide = () => { if (document.hidden) void recRef.current?.stop(); };
-    document.addEventListener('visibilitychange', onHide);
-    return () => document.removeEventListener('visibilitychange', onHide);
+    const onVisibility = () => {
+      if (document.hidden) return void recRef.current?.stop();
+      // Back from lock/background: resume the preview, or show Retry if the OS ended the camera.
+      const video = videoRef.current, stream = video?.srcObject as MediaStream | null;
+      if (!video || !stream) return;
+      if (stream.getVideoTracks().some((t) => t.readyState === 'ended')) cb.current.onStatus('error');
+      else video.play().catch(() => {});
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
   useEffect(() => { sceneRef.current?.setElement(element); }, [element]);
@@ -93,6 +100,11 @@ export const ArStage = forwardRef<ArStageHandle, Props>(function ArStage(
         if (dead) return tracker.close();
         scene = createScene(canvas, video);
       } catch {
+        // Don't leave the camera light on behind the error card.
+        stream.getTracks().forEach((t) => t.stop());
+        video.srcObject = null;
+        tracker?.close();
+        tracker = null;
         if (!dead) cb.current.onStatus('error');
         return;
       }
@@ -110,11 +122,20 @@ export const ArStage = forwardRef<ArStageHandle, Props>(function ArStage(
       let hands: P3[][] = [];
       const loop = () => {
         raf = requestAnimationFrame(loop);
+        try {
+          step();
+        } catch {
+          cancelAnimationFrame(raf);
+          void recRef.current?.stop();
+          cb.current.onStatus('error');
+        }
+      };
+      const step = () => {
         const now = performance.now();
         const g = governor.tick(now - last);
         last = now;
         const f = frames.next(video.currentTime, g.detectHandsThisFrame);
-        if (f.detect) { // repeated camera frame: keep last result, only animate
+        if (f.detect) { // on a repeated camera frame keep the last result and only animate
           const r = tracker!.detect(video, now, f.hands);
           face = faceSmooth.next(r.face);
           hands = [0, 1].flatMap((i) => (r.hands[i] ? [handSmooth[i].next(r.hands[i])!] : (handSmooth[i].next(null), [])));
@@ -137,6 +158,7 @@ export const ArStage = forwardRef<ArStageHandle, Props>(function ArStage(
       tracker?.close();
       scene?.dispose();
       sceneRef.current = null;
+      cb.current.onFaceVisible(false);
     };
   }, [retryKey]);
 
