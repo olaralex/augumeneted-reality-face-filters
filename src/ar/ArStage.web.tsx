@@ -42,7 +42,8 @@ export const ArStage = forwardRef<ArStageHandle, Props>(function ArStage(
         canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png'));
     },
     startRecording() {
-      if (!sceneRef.current || recRef.current) return;
+      if (!sceneRef.current) throw new Error('stage not ready');
+      if (recRef.current) return;
       const rec = createRecorder(canvasRef.current!, (b) => {
         recRef.current = null;
         cb.current.onRecordingStopped(b);

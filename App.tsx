@@ -28,7 +28,7 @@ export default function App() {
   // File is built before the sheet opens so "Salvează" can share with no await first.
   const open = (blob: Blob, kind: Preview['kind']) => {
     const ext = kind === 'photo' ? 'png' : blob.type.startsWith('video/mp4') ? 'mp4' : 'webm';
-    setPreview({ kind, file: new File([blob], captureFileName(element, ext, new Date()), { type: blob.type }) });
+    setPreview({ kind, file: new File([blob], captureFileName(element, ext, new Date()), { type: blob.type.split(';')[0] }) });
   };
 
   return (
@@ -47,13 +47,14 @@ export default function App() {
       <TopBar recording={recording} />
       <StatusOverlay status={status} faceVisible={faceVisible} onRetry={() => setRetryKey((k) => k + 1)} />
       <Dock active={element} onSelect={(id) => !recording && setElement((cur) => toggleElement(cur, id))}>
-        <CaptureButton
-          recording={recording}
-          onPhoto={() => { stage.current?.takePhoto().then((b) => open(b, 'photo'), () => {}); }}
-          onRecordStart={() => { try { stage.current?.startRecording(); setRecording(true); } catch { /* unsupported */ } }}
-          onRecordStop={() => { void stage.current?.stopRecording(); }}
-        />
-
+        {status === 'ready' && (
+          <CaptureButton
+            recording={recording}
+            onPhoto={() => { stage.current?.takePhoto().then((b) => open(b, 'photo'), () => {}); }}
+            onRecordStart={() => { try { stage.current?.startRecording(); setRecording(true); } catch { /* not ready or unsupported */ } }}
+            onRecordStop={() => { void stage.current?.stopRecording(); }}
+          />
+        )}
       </Dock>
       {preview && <PreviewSheet {...preview} onSave={() => setPreview(null)} onDiscard={() => setPreview(null)} />}
     </View>

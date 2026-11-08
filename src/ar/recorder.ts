@@ -30,7 +30,7 @@ export function createRecorder(canvas: HTMLCanvasElement, onStop?: (blob: Blob |
           onStop?.(blob);
         };
       });
-      r.start();
+      r.start(1000); // timeslice: chunks arrive during recording (Safari)
       rec = r;
       timer = setTimeout(() => void api.stop(), MAX_RECORD_MS);
     },
