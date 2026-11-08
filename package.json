@@ -28,6 +28,7 @@
     "start": "expo start",
     "web": "expo start --web",
     "export": "expo export -p web",
+    "phone": "expo export -p web && node scripts/serve-https.mjs",
     "test": "jest",
     "postinstall": "node scripts/fetch-assets.mjs"
   },
