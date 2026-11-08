@@ -6,4 +6,8 @@ export const copy = {
   error: 'Ceva n-a mers. Reîncearcă.',
   retry: 'Reîncearcă',
   noFace: 'Încadrează-ți fața',
+  save: 'Salvează',
+  discard: 'Renunță',
+  saved: 'Salvat',
+  capture: 'Fă o poză, ține apăsat pentru video',
 } as const;
