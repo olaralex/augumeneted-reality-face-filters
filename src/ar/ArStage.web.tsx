@@ -142,7 +142,8 @@ export const ArStage = forwardRef<ArStageHandle, Props>(function ArStage(
           hands = handSmooth.next(r.hands, r.handedness);
           if (!!face !== visible) cb.current.onFaceVisible((visible = !!face));
         }
-        scene!.setPixelRatio(g.pixelRatio);
+        // Resizing the captured canvas mid-recording can corrupt the video; applies once it stops.
+        if (!recRef.current) scene!.setPixelRatio(g.pixelRatio);
         scene!.setDetail(g.detail);
         scene!.update(face, hands, now / 1000);
         scene!.render();
