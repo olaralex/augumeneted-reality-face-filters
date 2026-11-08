@@ -48,3 +48,4 @@ public/wasm/
 dist/
 .cert/
 .claude/
+*.stackdump
