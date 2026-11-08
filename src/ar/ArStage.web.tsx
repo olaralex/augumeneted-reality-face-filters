@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ELEMENTS, type ElementId } from '../theme';
+import type { ElementId } from '../theme';
 import { cameraErrorToStatus, type ArStatus } from './cameraError';
 import { createTracker } from './tracker';
 import { createScene } from './scene';
@@ -21,16 +21,6 @@ export function ArStage({ element, onStatus, onFaceVisible, retryKey }: Props) {
   cb.current = { onStatus, onFaceVisible, element };
 
   useEffect(() => { sceneRef.current?.setElement(element); }, [element]);
-
-  // Temporary (removed in Task 6): keys 1–4 = fire/ice/earth/water, 0 = off.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const i = '01234'.indexOf(e.key);
-      if (i >= 0) sceneRef.current?.setElement(i ? ELEMENTS[i - 1].id : null);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
 
   useEffect(() => {
     const video = videoRef.current!;
