@@ -36,7 +36,9 @@ export function CaptureButton(props: Props) {
         // Unsupported recording: a press is always a photo, no hold timer.
         onPressIn={recordable ? gesture.pressIn : undefined}
         onPressOut={recordable ? gesture.pressOut : () => props.onPhoto()}
-        style={styles.ring}
+        // RNW ends the press on touch `contextmenu` (Android long-press) unless onLongPress is set.
+        onLongPress={() => {}}
+        style={[styles.ring, noSelect]}
       >
         <View style={props.recording ? styles.stop : styles.dot} />
       </Pressable>
@@ -48,6 +50,9 @@ export function CaptureButton(props: Props) {
     </View>
   );
 }
+
+// Web-only: no text selection or iOS callout during a hold.
+const noSelect = { userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } as any;
 
 const styles = StyleSheet.create({
   col: { alignItems: 'center', gap: 8 },
