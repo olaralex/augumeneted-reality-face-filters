@@ -4,6 +4,7 @@ import { cameraErrorToStatus, type ArStatus } from './cameraError';
 import { createTracker } from './tracker';
 import { createScene } from './scene';
 import { createSmoother, type P3 } from './smoothing';
+import { createHandSmoothers } from './handSmoothing';
 import { createFrameGate } from './frameGate';
 import { createGovernor } from './governor';
 import { createRecorder } from './recorder';
@@ -111,7 +112,7 @@ export const ArStage = forwardRef<ArStageHandle, Props>(function ArStage(
       sceneRef.current = scene;
       scene.setElement(cb.current.element);
       const faceSmooth = createSmoother();
-      const handSmooth = [createSmoother(), createSmoother()];
+      const handSmooth = createHandSmoothers();
       const governor = createGovernor();
       let visible = false;
       let last = performance.now();
@@ -138,7 +139,7 @@ export const ArStage = forwardRef<ArStageHandle, Props>(function ArStage(
         if (f.detect) { // on a repeated camera frame keep the last result and only animate
           const r = tracker!.detect(video, now, f.hands);
           face = faceSmooth.next(r.face);
-          hands = [0, 1].flatMap((i) => (r.hands[i] ? [handSmooth[i].next(r.hands[i])!] : (handSmooth[i].next(null), [])));
+          hands = handSmooth.next(r.hands, r.handedness);
           if (!!face !== visible) cb.current.onFaceVisible((visible = !!face));
         }
         scene!.setPixelRatio(g.pixelRatio);
