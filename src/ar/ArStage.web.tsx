@@ -3,7 +3,8 @@ import type { ElementId } from '../theme';
 import { cameraErrorToStatus, type ArStatus } from './cameraError';
 import { createTracker } from './tracker';
 import { createScene } from './scene';
-import { createSmoother } from './smoothing';
+import { createSmoother, type P3 } from './smoothing';
+import { createFrameGate } from './frameGate';
 import { createGovernor } from './governor';
 import { createRecorder } from './recorder';
 
@@ -104,15 +105,21 @@ export const ArStage = forwardRef<ArStageHandle, Props>(function ArStage(
       let last = performance.now();
       cb.current.onStatus('ready');
 
+      const frames = createFrameGate();
+      let face: P3[] | null = null;
+      let hands: P3[][] = [];
       const loop = () => {
         raf = requestAnimationFrame(loop);
         const now = performance.now();
         const g = governor.tick(now - last);
         last = now;
-        const r = tracker!.detect(video, now, g.detectHandsThisFrame);
-        const face = faceSmooth.next(r.face);
-        const hands = [0, 1].flatMap((i) => (r.hands[i] ? [handSmooth[i].next(r.hands[i])!] : (handSmooth[i].next(null), [])));
-        if (!!face !== visible) cb.current.onFaceVisible((visible = !!face));
+        const f = frames.next(video.currentTime, g.detectHandsThisFrame);
+        if (f.detect) { // repeated camera frame: keep last result, only animate
+          const r = tracker!.detect(video, now, f.hands);
+          face = faceSmooth.next(r.face);
+          hands = [0, 1].flatMap((i) => (r.hands[i] ? [handSmooth[i].next(r.hands[i])!] : (handSmooth[i].next(null), [])));
+          if (!!face !== visible) cb.current.onFaceVisible((visible = !!face));
+        }
         scene!.setPixelRatio(g.pixelRatio);
         scene!.setDetail(g.detail);
         scene!.update(face, hands, now / 1000);
