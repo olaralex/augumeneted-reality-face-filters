@@ -47,3 +47,4 @@ public/models/
 public/wasm/
 dist/
 .cert/
+.claude/
