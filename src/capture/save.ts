@@ -1,14 +1,14 @@
-import type { ElementId } from '../theme';
+import type { OptionId } from '../theme';
 
 export function isIOS(nav: { userAgent: string; platform: string; maxTouchPoints: number }): boolean {
   return /iPhone|iPad|iPod/.test(nav.userAgent) || (nav.platform === 'MacIntel' && nav.maxTouchPoints > 1);
 }
 
-export function captureFileName(element: ElementId | null, ext: string, d: Date): string {
+export function captureFileName(option: OptionId | null, ext: string, d: Date): string {
   const p = (n: number) => String(n).padStart(2, '0');
   const date = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`;
   const time = `${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
-  return `iara-${element ?? 'camera'}-${date}-${time}.${ext}`;
+  return `iara-${option ?? 'camera'}-${date}-${time}.${ext}`;
 }
 
 export type SaveEnv = {

@@ -1,10 +1,15 @@
 import * as THREE from 'three';
-import { ELEMENTS, type ElementId } from '../theme';
+import { ELEMENTS, isOutfit, type ElementId, type OptionId } from '../theme';
 import { FACE_UVS, FACE_INDICES, FACE_EDGE } from './faceMeshData';
 import { buildHandGeometry } from './handMesh';
 import { createElementMaterial } from './materials';
 import { eyeOpenness, glowOpacity } from './eyeOpenness';
 import type { P3 } from './smoothing';
+import type { Facing } from './cameras';
+import type { PoseFrame } from './pose';
+import { OUTFIT_STYLES, type OutfitStyle } from './outfits';
+import { buildOutfitShapes, outfitUnit } from './outfitShapes';
+import { paintShapes } from './outfitPainter';
 
 const N = 468;
 const GLOW_SIZE = 0.06; // sprite diameter as a fraction of face width
@@ -38,6 +43,25 @@ export function createScene(canvas: HTMLCanvasElement, video: HTMLVideoElement) 
   );
   bg.position.set(0.5, 0.5, -1);
   scene.add(bg);
+
+  // Outfits are drawn in 2D at video resolution and shown as one textured plane over the video,
+  // so mirroring, photos and recordings pick them up like everything else.
+  const outCanvas = document.createElement('canvas');
+  const outCtx = outCanvas.getContext('2d')!;
+  const makeOutTex = () => {
+    const t = new THREE.CanvasTexture(outCanvas);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.flipY = false;
+    return t;
+  };
+  let outTex = makeOutTex();
+  const outMat = new THREE.MeshBasicMaterial({ map: outTex, transparent: true, depthTest: false, side: THREE.DoubleSide });
+  const outMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), outMat);
+  outMesh.position.set(0.5, 0.5, -0.5);
+  outMesh.frustumCulled = false;
+  outMesh.visible = false;
+  scene.add(outMesh);
+  let outfit: OutfitStyle | null = null;
 
   const faceGeo = new THREE.BufferGeometry();
   const facePos = new THREE.BufferAttribute(new Float32Array(N * 3), 3);
@@ -75,6 +99,14 @@ export function createScene(canvas: HTMLCanvasElement, video: HTMLVideoElement) 
     size = key;
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(w, h, false);
+    if (outCanvas.width !== w || outCanvas.height !== h) {
+      outCanvas.width = w;
+      outCanvas.height = h;
+      // GPU texture storage is fixed-size; a resized canvas needs a fresh texture.
+      outTex.dispose();
+      outMat.map = outTex = makeOutTex();
+      outMat.needsUpdate = true;
+    }
   }
 
   return {
@@ -110,7 +142,17 @@ export function createScene(canvas: HTMLCanvasElement, video: HTMLVideoElement) 
         handMesh.geometry = geo;
       }
     },
-    setElement(id: ElementId | null) {
+    updateOutfit(pose: PoseFrame | null, fullBody: boolean) {
+      outMesh.visible = !!outfit && !!pose && outCanvas.width > 0;
+      if (!outMesh.visible) return;
+      const shapes = buildOutfitShapes(pose, outfit!, fullBody, outCanvas.width, outCanvas.height);
+      paintShapes(outCtx, shapes, outfitUnit(pose!, outCanvas.width, outCanvas.height));
+      outTex.needsUpdate = true;
+    },
+    setOption(opt: OptionId | null) {
+      outfit = isOutfit(opt) ? OUTFIT_STYLES[opt] : null;
+      const id: ElementId | null = opt && !isOutfit(opt) ? opt : null;
+      if (!outfit) outMesh.visible = false;
       if (!id) {
         current = null; // update() hides every effect object while null
         return;
@@ -119,6 +161,11 @@ export function createScene(canvas: HTMLCanvasElement, video: HTMLVideoElement) 
       [faceMesh.material, handMesh.material] = current;
       const accent = ELEMENTS.find((e) => e.id === id)!.accent;
       eyes.forEach((e) => e.material.color.set(accent));
+    },
+    setFacing(f: Facing) {
+      // Front camera is mirrored (left=1, right=0); the rear camera is shown as-is.
+      [camera.left, camera.right] = f === 'user' ? [1, 0] : [0, 1];
+      camera.updateProjectionMatrix();
     },
     setPixelRatio(r: number) { pixelRatio = r; },
     setDetail(d: 0 | 1 | 2) { detail = d; },
@@ -129,6 +176,9 @@ export function createScene(canvas: HTMLCanvasElement, video: HTMLVideoElement) 
       Object.values(mats).forEach((pair) => pair.forEach((m) => m.dispose()));
       eyes.forEach((e) => e.material.dispose());
       glowTex.dispose();
+      outTex.dispose();
+      outMat.dispose();
+      outMesh.geometry.dispose();
       videoTex.dispose();
       renderer.dispose();
     },

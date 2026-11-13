@@ -47,6 +47,7 @@ describe('captureFileName', () => {
   it('formats local time', () => {
     expect(captureFileName('fire', 'png', new Date(2026, 10, 8, 14, 30, 5))).toBe('iara-fire-20261108-143005.png');
     expect(captureFileName(null, 'mp4', new Date(2026, 10, 8, 14, 30, 5))).toBe('iara-camera-20261108-143005.mp4');
+    expect(captureFileName('tracksuit', 'png', new Date(2026, 10, 13, 9, 5, 0))).toBe('iara-tracksuit-20261113-090500.png');
   });
 });
 

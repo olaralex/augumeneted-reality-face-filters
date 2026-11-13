@@ -1,44 +1,62 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { ELEMENTS, colors, type ElementId } from '../theme';
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ELEMENTS, GROUP_LABELS, OUTFITS, colors, type OptionId } from '../theme';
 
-type Props = { active: ElementId | null; onSelect: (id: ElementId) => void; children?: ReactNode };
+type Props = { active: OptionId | null; onSelect: (id: OptionId) => void; children?: ReactNode };
+
+const GROUPS = [
+  { label: GROUP_LABELS.elements, items: ELEMENTS },
+  { label: GROUP_LABELS.women, items: OUTFITS.filter((o) => o.group === 'women') },
+  { label: GROUP_LABELS.men, items: OUTFITS.filter((o) => o.group === 'men') },
+];
 
 export function Dock({ active, onSelect, children }: Props) {
   const wide = useWindowDimensions().width >= 640;
   return (
     <View style={styles.wrap} pointerEvents="box-none">
       {children}
-      <View style={styles.dock}>
-        {ELEMENTS.map((el) => {
-          const selected = active === el.id;
-          return (
-            <Pressable
-              key={el.id}
-              onPress={() => onSelect(el.id)}
-              accessibilityRole="button"
-              accessibilityLabel={el.label}
-              accessibilityState={{ selected }}
-              style={
-                wide
-                  ? [styles.item, styles.pill, { borderColor: selected ? el.accent : 'transparent' }]
-                  : [styles.ring, { borderColor: selected ? colors.text : 'transparent', opacity: selected ? 1 : 0.55 }]
-              }
-            >
-              {wide ? (
-                <>
-                  <Text style={styles.emoji}>{el.emoji}</Text>
-                  <Text style={[styles.label, selected && { color: el.accent }]}>{el.label}</Text>
-                </>
-              ) : (
-                <View style={[styles.circle, { backgroundColor: el.accent }]}>
-                  <Text style={styles.emoji}>{el.emoji}</Text>
-                </View>
-              )}
-            </Pressable>
-          );
-        })}
-      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.scroll}
+        contentContainerStyle={styles.dock}
+      >
+        {GROUPS.map((g) => (
+          <View key={g.label} style={styles.group}>
+            <Text style={styles.groupLabel}>{g.label}</Text>
+            <View style={styles.row}>
+              {g.items.map((el) => {
+                const selected = active === el.id;
+                return (
+                  <Pressable
+                    key={el.id}
+                    onPress={() => onSelect(el.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={el.label}
+                    accessibilityState={{ selected }}
+                    style={
+                      wide
+                        ? [styles.item, styles.pill, { borderColor: selected ? el.accent : 'transparent' }]
+                        : [styles.ring, { borderColor: selected ? colors.text : 'transparent', opacity: selected ? 1 : 0.55 }]
+                    }
+                  >
+                    {wide ? (
+                      <>
+                        <Text style={styles.emoji}>{el.emoji}</Text>
+                        <Text style={[styles.label, selected && { color: el.accent }]}>{el.label}</Text>
+                      </>
+                    ) : (
+                      <View style={[styles.circle, { backgroundColor: el.accent }]}>
+                        <Text style={styles.emoji}>{el.emoji}</Text>
+                      </View>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -46,9 +64,13 @@ export function Dock({ active, onSelect, children }: Props) {
 const styles = StyleSheet.create({
   // 24 px fixed bottom offset: react-native-safe-area-context is not installed.
   wrap: { position: 'absolute', left: 0, right: 0, bottom: 24, alignItems: 'center', gap: 16 },
+  scroll: { maxWidth: '100%', flexGrow: 0 },
+  group: { gap: 4, alignItems: 'flex-start' },
+  groupLabel: { color: colors.muted, fontFamily: 'Inter_400Regular', fontSize: 11, paddingLeft: 6 },
+  row: { flexDirection: 'row', gap: 4 },
   dock: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 12,
     padding: 6,
     borderRadius: 999,
     borderWidth: 1,

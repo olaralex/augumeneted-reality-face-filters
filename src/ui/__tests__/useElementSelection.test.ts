@@ -6,3 +6,8 @@ test('toggleElement', () => {
   expect(toggleElement(null, 'water')).toBe('water');
   expect(INITIAL_ELEMENT).toBe('fire');
 });
+
+test('toggleElement switches between elements and outfits', () => {
+  expect(toggleElement('fire', 'velour')).toBe('velour');
+  expect(toggleElement('velour', 'velour')).toBeNull();
+});

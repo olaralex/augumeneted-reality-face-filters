@@ -3,9 +3,9 @@ import type { ArStatus } from '../ar/cameraError';
 import { copy } from '../copy';
 import { colors } from '../theme';
 
-type Props = { status: ArStatus; faceVisible: boolean; onRetry: () => void };
+type Props = { status: ArStatus; subjectVisible: boolean; subject: 'face' | 'body'; bodyLoading: boolean; onRetry: () => void };
 
-export function StatusOverlay({ status, faceVisible, onRetry }: Props) {
+export function StatusOverlay({ status, subjectVisible, subject, bodyLoading, onRetry }: Props) {
   if (status === 'loading') {
     return (
       <View style={styles.center} pointerEvents="none">
@@ -14,9 +14,10 @@ export function StatusOverlay({ status, faceVisible, onRetry }: Props) {
     );
   }
   if (status === 'ready') {
-    return faceVisible ? null : (
+    const hint = bodyLoading ? copy.loadingBody : subjectVisible ? null : subject === 'face' ? copy.noFace : copy.noBody;
+    return hint === null ? null : (
       <View style={styles.hintWrap} pointerEvents="none">
-        <Text style={[styles.muted, styles.hint]}>{copy.noFace}</Text>
+        <Text style={[styles.muted, styles.hint]}>{hint}</Text>
       </View>
     );
   }
